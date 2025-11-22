@@ -77,6 +77,16 @@
 			"outbound": "Ausgehende Faxe",
 			"storage": "Speicher"
 		},
+		"outbound": {
+			"enterToNumber": "Enter Fax To Number",
+			"missingFile": "You must choose a PDF or TIFF file to send",
+			"missingFrom": "You must select the source number.",
+			"missingTo": "You must enter the destination fax number.",
+			"selectFile": "Upload your file (PDF or TIFF format)",
+			"selectNumber": "Select From Number",
+			"sendFax": "Send Fax",
+			"success": "fax has been queued for sending"
+		},
 		"title": "Faxportal",
 		"CDRPopup": {
 			"title": "Faxdetails"

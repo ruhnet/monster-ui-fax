@@ -29,7 +29,8 @@ define(function(require) {
 				default: 7,
 				max: 31
 			},
-			faxboxes: {}
+			faxboxes: {},
+			faxnumbers: []
 		},
 
 		initApp: function(callback) {
@@ -46,7 +47,8 @@ define(function(require) {
 
 			self.getFaxData(function(results) {
 				self.appFlags.faxboxes = _.keyBy(results.faxboxes, 'id');
-console.log(_.size(self.appFlags.faxboxes));
+				//console.log(_.size(self.appFlags.faxboxes));
+				self.appFlags.faxnumbers = results.faxnumbers;
 				var menus = [
 					{
 						tabs: [
@@ -90,6 +92,11 @@ console.log(_.size(self.appFlags.faxboxes));
 						callback(null, faxboxes);
 					});
 				},
+				faxnumbers: function(callback) {
+					self.getFaxNumbers(function(faxnumbers) {
+						callback(null, faxnumbers);
+					});
+				},
 				storage: function(callback) {
 					self.getStorage(function(storage) {
 						callback(null, storage);
@@ -119,6 +126,7 @@ console.log(_.size(self.appFlags.faxboxes));
 				parent = args.container || $('#fax_app_container .app-content-wrapper'),
 				dataTemplate = {
 					faxboxes: self.appFlags.faxboxes,
+					faxnumbers: self.appFlags.faxnumbers,
 					count: _.size(self.appFlags.faxboxes)
 				},
 				template = $(self.getTemplate({
@@ -315,6 +323,20 @@ console.log(_.size(self.appFlags.faxboxes));
 				cb.prop('checked', !cb.prop('checked'));
 				afterSelect();
 			});
+
+			template.on('change', '#sendfax_uploaded_file', function() {
+				if ($(this).val()) { // Check if a file is selected
+					$('.send-fax-button').prop('disabled', false);
+				} else {
+					$('.send-fax-button').prop('disabled', true);
+				}
+			});
+
+			template.on('click', '.send-fax-button', function(e) {
+				e.preventDefault();
+				self.sendFaxUpload(template);
+			});
+
 		},
 
 		displayListFaxes: function(type, container, faxboxId) {
@@ -734,8 +756,65 @@ console.log(_.size(self.appFlags.faxboxes));
 					callback && callback(data.data);
 				}
 			});
+		},
+
+		sendFaxUpload: function(template) {
+			var self = this;
+			var toNumber = template.find('#sendfax_to_number').val();
+			var fromNumber = template.find('#sendfax_from_number').val();
+			var file = template.find('#sendfax_uploaded_file')[0].files[0];
+			if (!file) return monster.ui.alert(self.i18n.active().fax.outbound.missingFile);
+			if (!toNumber) return monster.ui.alert(self.i18n.active().fax.outbound.missingTo);
+			if (!fromNumber || fromNumber == 'none') return monster.ui.alert(self.i18n.active().fax.outbound.missingFrom);
+
+			var selected_faxbox = template.find('.select-faxbox').val();
+
+			//create json blob to use in form data
+			var jsonData = JSON.stringify({data: {from_number: fromNumber, to_number: toNumber, faxbox_id: selected_faxbox}});
+			var jsonBlob = new Blob([jsonData], { type: 'application/json' });
+
+			var form = new FormData();
+			form.set("json", jsonBlob);
+			form.set('file', file, file.name);
+
+			$.ajax({
+				url: monster.config.api.default + 'accounts/' + self.accountId + '/faxes',
+				method: 'put',
+				processData: false,
+				contentType: false,
+				headers: { 'X-Auth-Token': monster.util.getAuthToken() },
+				data: form,
+				success: function(res) {
+					monster.ui.toast({ type: "success", message: self.i18n.active().fax.outbound.success });
+					console.log(res.data);
+					template.find('#sendfax_uploaded_file').val(null);
+				},
+				error: function(err) {
+					console.log(err);
+					monster.ui.alert('<h3>Error</h3><p><pre>err.responseText</pre></p>');
+				}
+			});
+		},
+
+		getFaxNumbers: function(callback) {
+			var self = this;
+
+			self.callApi({
+				resource: 'numbers.listAll',
+				data: {
+					accountId: self.accountId,
+					filters: { paginate: false }
+				},
+				success: function(res, status) {
+					var numbers = _.map(res.data.numbers, function(n, number) {
+						return {number: number};
+					});
+					callback && callback(numbers);
+				}
+			});
 		}
-	};
+
+	}; //app
 
 	return app;
 });
