@@ -181,3 +181,25 @@
   line-height: 15px;
   padding: 2px;
   white-space: normal; }
+
+#send_outbound_fax {
+  float: right;
+  border: 1px solid #e0e0e9;
+  border-radius: 10px;
+  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  clear: right;
+}
+
+.outbound-hidden {
+  display: none;
+}
+
+.outbound-title {
+  font-size: +1.2em;
+  font-weight: 500;
+  color: #2297FF;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}

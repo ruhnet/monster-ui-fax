@@ -85,6 +85,7 @@
 			"selectFile": "Upload your file (PDF or TIFF format)",
 			"selectNumber": "Select From Number",
 			"sendFax": "Send Fax",
+			"sendAFax": "Send a Fax",
 			"success": "fax has been queued for sending"
 		},
 		"title": "Faxportal",

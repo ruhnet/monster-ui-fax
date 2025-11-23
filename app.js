@@ -325,12 +325,25 @@ define(function(require) {
 			});
 
 			template.on('change', '#sendfax_uploaded_file', function() {
+				$('.outbound-hidden').show();
+				$('.outbound-expand').hide();
 				if ($(this).val()) { // Check if a file is selected
 					$('.send-fax-button').prop('disabled', false);
 				} else {
 					$('.send-fax-button').prop('disabled', true);
 				}
 			});
+
+			template.on('click', '.outbound-expand', function() {
+				$('.outbound-hidden').slideDown();
+				$('.outbound-expand').hide();
+			});
+			template.on('click', '.outbound-contract', function() {
+				$('.outbound-hidden').slideUp();
+				$('.outbound-contract').hide();
+				$('.outbound-expand').show();
+			});
+
 
 			template.on('click', '.send-fax-button', function(e) {
 				e.preventDefault();
