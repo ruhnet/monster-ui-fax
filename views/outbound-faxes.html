@@ -15,6 +15,34 @@
 		</div>
 
 		<a id="refresh_faxbox" class="monster-link pull-left" href="javascript:void(0);" data-toggle="tooltip" data-placement="top" data-original-title="{{ i18n.fax.actionBar.refresh }}"><i class="fa fa-refresh"></i></a>
+
+		<!-- SEND OUTBOUND FAX VIA API -->
+		<div id="send_outbound_fax">
+			<div class="outbound-title">
+				<span class="outbound-title">{{i18n.fax.outbound.sendAFax}}</span>
+				<i class="fa fa-chevron-down outbound-expand"></i>
+				<i class="fa fa-chevron-up outbound-contract outbound-hidden"></i>
+			</div>
+			<input id="sendfax_uploaded_file" name="sendfax_uploaded_file" type="file" accept=".pdf,.tif,.tiff" class="kz-input-file">
+			<div class="outbound-hidden">
+				<div class="select-header">
+					{{ i18n.fax.outbound.toNumber }}
+				</div>
+				<input id="sendfax_to_number" name="sendfax_to_number" type="text" maxlength=16 placeholder="{{i18n.fax.outbound.enterToNumber}}"><br />
+				<div id="from_number_header" class="select-header">
+					{{ i18n.fax.outbound.fromNumber }}
+				</div>
+				<div class="from-number-select">
+					<select id="sendfax_from_number">
+						<option value="none">{{i18n.fax.outbound.selectFromNumber}}</option>
+					</select>
+					<i class="fa fa-plus show-all-numbers"></i>
+				</div>
+			</div>
+			<button class="monster-button-primary send-fax-button outbound-hidden" disabled>{{i18n.fax.outbound.sendFax}}</button>
+		</div>
+		<!-- END OF SEND OUTBOUND FAX VIA API -->
+
 	</div>
 	<div class="monster-table-wrapper-spaced">
 		<div class="action-bar monster-table-header">

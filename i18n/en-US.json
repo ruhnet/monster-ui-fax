@@ -7,6 +7,21 @@
 			"logs": "Email-to-Fax Logs",
 			"storage": "Storage"
 		},
+		"outbound": {
+			"allNumbers": "Admin Action: All numbers in the account are now visible for fax from_number.",
+			"enterToNumber": "Enter Fax To Number",
+			"fromNumber": "From Number",
+			"fromNumberAll": "From Number [All Numbers]",
+			"missingFile": "You must choose a PDF or TIFF file to send",
+			"missingFrom": "You must select the source number.",
+			"missingTo": "You must enter the destination fax number.",
+			"selectFile": "Upload your file (PDF or TIFF format)",
+			"selectFromNumber": "Select From Number",
+			"sendFax": "Send Fax",
+			"sendAFax": "Send a Fax",
+			"success": "fax has been queued for sending",
+			"toNumber": "To Number"
+		},
 		"table": {
 			"columns": {
 				"status": "Status",
