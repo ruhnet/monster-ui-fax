@@ -918,22 +918,24 @@ define(function(require) {
 				self.getCallflows(function(callflows) { //get all callflows
 					let done = new Promise((resolve, reject) => { //let these finish before proceeding
 						if (callflows.length == 0) resolve();
-						_.each(callflows, function(cf, idx) {
-							if (cf.modules.includes('faxbox')) { //if callflow uses the faxbox module, get it individually
-								self.getCallflow(cf.id, function(callflow) {
-									var fbid = findFaxboxId(callflow.flow); //search for the faxbox ID
-									if (fbid) faxboxNumbers[fbid] = [];
-									_.each(cf.numbers, function(cfnum) { //check each callflow number to see if it's a real DID
-										if (numbers.includes(cfnum)) {
-											faxboxNumbers[fbid].push(cfnum); //add the number (if it's a DID) to the list for this faxbox ID
-										}
-									});
-									if (faxboxNumbers[fbid] && faxboxNumbers[fbid].length == 0) { //this faxbox has no DIDs routing to it
-										console.log('Warning: faxbox '+fbid+' has no DIDs routing to it!');
+						var faxCallflows = _.filter(callflows, function(cf) { //ignore non-faxbox callflows
+							return cf.modules.includes('faxbox');
+						});
+						if (faxCallflows.length == 0) resolve();
+						_.each(faxCallflows, function(cf, idx) {
+							self.getCallflow(cf.id, function(callflow) { //this callflow has faxbox, so get it for details
+								var fbid = findFaxboxId(callflow.flow); //search for the faxbox ID
+								if (fbid) faxboxNumbers[fbid] = [];
+								_.each(cf.numbers, function(cfnum) { //check each callflow number to see if it's a real DID
+									if (numbers.includes(cfnum)) {
+										faxboxNumbers[fbid].push(cfnum); //add the number (if it's a DID) to the list for this faxbox ID
 									}
 								});
-							}
-							if ((idx + 1) == callflows.length) resolve(); //processed all callflows so we're done
+								if (faxboxNumbers[fbid] && faxboxNumbers[fbid].length == 0) { //this faxbox has no DIDs routing to it
+									console.log('Warning: faxbox '+fbid+' has no DIDs routing to it!');
+								}
+								if ((idx + 1) == faxCallflows.length) resolve(); //processed all callflows so we're done
+							});
 						});
 					});
 					done.then(() => {

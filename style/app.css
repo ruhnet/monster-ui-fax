@@ -217,3 +217,18 @@
   flex-direction: row;
   align-items: center;
 }
+
+.sendbutton-help {
+  display: flex;
+  flex-direction: row;
+}
+
+button.sendbutton-help {
+  font-size: +1.6em;
+}
+
+#send_help {
+  font-size: +1.5em;
+  margin-left: 12px;
+  color: #555;
+}

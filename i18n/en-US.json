@@ -12,6 +12,7 @@
 			"enterToNumber": "Enter Fax To Number",
 			"fromNumber": "From Number",
 			"fromNumberAll": "From Number [All Numbers]",
+			"help": "After a fax has been queued, please allow several minutes for it to send before expecting it to be available in the outbound faxes table below.",
 			"missingFile": "You must choose a PDF or TIFF file to send",
 			"missingFrom": "You must select the source number.",
 			"missingTo": "You must enter the destination fax number.",
