@@ -30,7 +30,8 @@ define(function(require) {
 				max: 31
 			},
 			faxboxes: {},
-			faxnumbers: []
+			allnumbers: [],   // list of all numbers in the account
+			faxboxnumbers: {} // { "somefaxboxid": [array of DIDs that go to this faxbox] }
 		},
 
 		initApp: function(callback) {
@@ -48,7 +49,8 @@ define(function(require) {
 			self.getFaxData(function(results) {
 				self.appFlags.faxboxes = _.keyBy(results.faxboxes, 'id');
 				//console.log(_.size(self.appFlags.faxboxes));
-				self.appFlags.faxnumbers = results.faxnumbers;
+				self.appFlags.faxboxnumbers = results.faxboxnumbers;
+
 				var menus = [
 					{
 						tabs: [
@@ -92,9 +94,9 @@ define(function(require) {
 						callback(null, faxboxes);
 					});
 				},
-				faxnumbers: function(callback) {
-					self.getFaxNumbers(function(faxnumbers) {
-						callback(null, faxnumbers);
+				faxboxnumbers: function(callback) {
+					self.getFaxboxNumbers(function(faxboxnumbers) {
+						callback(null, faxboxnumbers);
 					});
 				},
 				storage: function(callback) {
@@ -126,7 +128,6 @@ define(function(require) {
 				parent = args.container || $('#fax_app_container .app-content-wrapper'),
 				dataTemplate = {
 					faxboxes: self.appFlags.faxboxes,
-					faxnumbers: self.appFlags.faxnumbers,
 					count: _.size(self.appFlags.faxboxes)
 				},
 				template = $(self.getTemplate({
@@ -190,6 +191,9 @@ define(function(require) {
 
 				template.find('.select-faxbox').val(faxboxId).trigger('chosen:updated');
 
+				//load send from phone numbers belonging to this faxbox
+				self.loadNumberChoices(template, self.appFlags.faxboxnumbers[faxboxId]);
+				self.maybeShowAllNumbersOption(template);
 				self.displayListFaxes(type, template, faxboxId);
 			});
 
@@ -344,6 +348,12 @@ define(function(require) {
 				$('.outbound-expand').show();
 			});
 
+			template.on('click', '.show-all-numbers', function() {
+				self.loadNumberChoices(template, self.appFlags.allnumbers); //load all numbers
+				$('.show-all-numbers').fadeOut(2000);
+				monster.ui.toast({ type: "info", message: self.i18n.active().fax.outbound.allNumbers });
+				$('#from_number_header').text(self.i18n.active().fax.outbound.fromNumberAll);
+			});
 
 			template.on('click', '.send-fax-button', function(e) {
 				e.preventDefault();
@@ -771,6 +781,29 @@ define(function(require) {
 			});
 		},
 
+		loadNumberChoices: function(template, numbers) {
+			var self = this;
+			var $phoneNumberSelect = template.find('#sendfax_from_number');
+			if ($phoneNumberSelect) {
+				$phoneNumberSelect.empty();
+				if (numbers && numbers.length > 1) {
+					$phoneNumberSelect.append($('<option>', { value: "none", text: self.i18n.active().fax.outbound.selectFromNumber }));
+				}
+				_.each(numbers, function(number) {
+					$phoneNumberSelect.append($('<option>', { value: number, text: number }));
+				});
+			}
+		},
+
+		maybeShowAllNumbersOption: function(template) {
+			var self = this;
+
+			$('#from_number_header').text(self.i18n.active().fax.outbound.fromNumber);
+			if (monster.util.isAdmin()) {
+				$('.show-all-numbers').show();
+			}
+		},
+
 		sendFaxUpload: function(template) {
 			var self = this;
 			var toNumber = template.find('#sendfax_to_number').val();
@@ -804,28 +837,111 @@ define(function(require) {
 				},
 				error: function(err) {
 					console.log(err);
-					monster.ui.alert('<h3>Error</h3><p><pre>err.responseText</pre></p>');
+					monster.ui.alert('<h3>Error</h3><p><pre>' + err.responseText + '</pre></p>');
 				}
 			});
 		},
 
-		getFaxNumbers: function(callback) {
+		getCallflows: function(callback) {
 			var self = this;
 
 			self.callApi({
-				resource: 'numbers.listAll',
+				resource: 'callflow.list',
 				data: {
 					accountId: self.accountId,
 					filters: { paginate: false }
 				},
-				success: function(res, status) {
-					var numbers = _.map(res.data.numbers, function(n, number) {
-						return {number: number};
-					});
+				error: function(err) {
+					console.log(err);
+				},
+				success: function(res) {
+					callback && callback(res.data);
+				}
+			});
+		},
+
+		getCallflow: function(id, callback) {
+			var self = this;
+
+			self.callApi({
+				resource: 'callflow.get',
+				data: {
+					accountId: self.accountId,
+					callflowId: id
+				},
+				error: function(err) {
+					console.log(err);
+				},
+				success: function(res) {
+					callback && callback(res.data);
+				}
+			});
+		},
+
+		getNumbers: function(callback) {
+			var self = this;
+
+			if (self.appFlags.allnumbers.length > 0) {
+				return callback && callback(self.appFlags.allnumbers); //sortof cache :)
+			}
+
+			self.callApi({
+				resource: 'numbers.list',
+				data: {
+					accountId: self.accountId,
+					filters: { paginate: false }
+				},
+				error: function(err) {
+					console.log(err);
+				},
+				success: function(res) {
+					var numbers = _.keys(res.data.numbers);
+					self.appFlags.allnumbers = numbers;
 					callback && callback(numbers);
 				}
 			});
-		}
+		},
+
+		getFaxboxNumbers: function(callback) {
+			var self = this,
+			faxboxNumbers = {};
+
+			var findFaxboxId = function(flow) {
+				if (flow.module == 'faxbox') {
+					return flow.data.id;
+				} else if (flow.children.length > 0) {
+					findFaxBoxId(flow.children["_"]);
+				}
+			};
+
+			self.getNumbers(function(numbers) {
+				self.getCallflows(function(callflows) { //get all callflows
+					let done = new Promise((resolve, reject) => { //let these finish before proceeding
+						if (callflows.length == 0) resolve();
+						_.each(callflows, function(cf, idx) {
+							if (cf.modules.includes('faxbox')) { //if callflow uses the faxbox module, get it individually
+								self.getCallflow(cf.id, function(callflow) {
+									var fbid = findFaxboxId(callflow.flow); //search for the faxbox ID
+									if (fbid) faxboxNumbers[fbid] = [];
+									_.each(cf.numbers, function(cfnum) { //check each callflow number to see if it's a real DID
+										if (numbers.includes(cfnum)) {
+											faxboxNumbers[fbid].push(cfnum); //add the number (if it's a DID) to the list for this faxbox ID
+										}
+									});
+									if (faxboxNumbers[fbid] && faxboxNumbers[fbid].length == 0) { //this faxbox has no DIDs routing to it
+										console.log('Warning: faxbox '+fbid+' has no DIDs routing to it!');
+									}
+								});
+							}
+							if ((idx + 1) == callflows.length) resolve(); //processed all callflows so we're done
+						});
+					});
+					done.then(() => {
+						callback && callback(faxboxNumbers);
+					});
+				});
+			});
+		} //getFaxboxNumbers()
 
 	}; //app
 

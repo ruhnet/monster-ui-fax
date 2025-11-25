@@ -29,15 +29,15 @@
 					{{ i18n.fax.outbound.toNumber }}
 				</div>
 				<input id="sendfax_to_number" name="sendfax_to_number" type="text" maxlength=16 placeholder="{{i18n.fax.outbound.enterToNumber}}"><br />
-				<div class="select-header">
+				<div id="from_number_header" class="select-header">
 					{{ i18n.fax.outbound.fromNumber }}
 				</div>
-				<select id="sendfax_from_number">
-					<option value="none">{{i18n.fax.outbound.selectNumber}}</option>
-					{{#each faxnumbers}}
-					<option value="{{number}}">{{number}}</option>
-					{{/each}}
-				</select>
+				<div class="from-number-select">
+					<select id="sendfax_from_number">
+						<option value="none">{{i18n.fax.outbound.selectFromNumber}}</option>
+					</select>
+					<i class="fa fa-plus show-all-numbers"></i>
+				</div>
 			</div>
 			<button class="monster-button-primary send-fax-button outbound-hidden" disabled>{{i18n.fax.outbound.sendFax}}</button>
 		</div>

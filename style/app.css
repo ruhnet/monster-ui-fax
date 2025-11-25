@@ -203,3 +203,17 @@
   justify-content: space-between;
   padding-bottom: 4px;
 }
+
+.show-all-numbers {
+  font-size: +1.1em;
+  margin-bottom: 10px;
+  margin-left: 6px;
+  color: #2297FF;
+  display: none;
+}
+
+.from-number-select {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
